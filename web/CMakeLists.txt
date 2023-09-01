@@ -17,15 +17,23 @@ foreach(asset ${assets})
         list(GET switches 1 png_width)
         list(GET switches 2 png_height)
         set(png_source "${CMAKE_CURRENT_LIST_DIR}/../../../${png_source}")
+        add_custom_target("image-${base}" ALL DEPENDS "${html_dir}/${base}")
         add_custom_command(OUTPUT "${html_dir}/${base}"
             COMMAND "inkscape" -o "${html_dir}/${base}"
                 -w ${png_width} -h ${png_height} "${png_source}"
-            MAIN_DEPENDENCY "${png_source}")
-        add_custom_target("image-${base}" ALL DEPENDS "${html_dir}/${base}")
-    elseif(${asset} MATCHES ".+\.wav$")
+            MAIN_DEPENDENCY "${asset}"
+            DEPENDS "${png_source}")
+    elseif(${base} MATCHES ".+\.lnk$")
+        string(REGEX REPLACE "\.lnk$" "" base ${base})
+        file(READ "${asset}" source_path)
+        add_custom_target("lnk-${base}" ALL DEPENDS "${html_dir}/${base}")
+        add_custom_command(OUTPUT "${html_dir}/${base}"
+            COMMAND ln -s "${asset_dir}/${source_path}" "${html_dir}/${base}"
+            MAIN_DEPENDENCY "${asset}")
+    elseif(${base} MATCHES ".+\.wav$")
         configure_file("${asset}" "${html_dir}/${base}" COPYONLY)
     else()
-        configure_file("${asset}" "${html_dir}/${base}")
+        configure_file("${asset}" "${html_dir}/${base}" @ONLY)
     endif()
     list(REMOVE_ITEM extra_assets ${base})
 endforeach()
